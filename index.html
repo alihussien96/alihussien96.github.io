@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PS4 11.00 Exploit</title>
+    <!-- Include Scapy.js library -->
     <script src="https://cdn.jsdelivr.net/npm/scapy@0.29.0/build/scapy.js"></script>
     <script>
         async function runExploit() {
             try {
                 document.getElementById('status').innerText = 'Starting exploit...';
 
-                // Fetch payloads
+                // Fetch payloads from remote server
                 const primaryPayload = await fetchPayload('https://alihussien96.github.io/payload.bin');
                 const stage2Payload = await fetchPayload('https://alihussien96.github.io/stage2_11.00.bin');
 
@@ -41,7 +42,7 @@
             const localMac = await scapy.get_mac_address(iface);
             console.log('Local MAC address:', localMac);
             
-            // Create PPPoE packet with payloads
+            // Create PPPoE packet with payloads for primary and stage 2 exploitation
             const pppoed_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
                                scapy.PPPoED({service_name: 'Internet'}) /
                                scapy.Raw(primaryPayload);
@@ -49,7 +50,7 @@
             // Send PPPoE packet
             await scapy.sendp(iface, pppoed_pkt);
             
-            // Send stage2 payload after some delay (if needed)
+            // Optional: Send stage 2 payload after a delay
             await new Promise(resolve => setTimeout(resolve, 1000)); // Adjust delay as necessary
             const stage2_pkt = scapy.Ether({src: localMac, dst: 'ff:ff:ff:ff:ff:ff'}) /
                                scapy.PPPoED({service_name: 'Internet'}) /
